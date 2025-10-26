@@ -5,7 +5,7 @@ import Task from '../models/task.model.js'
 const router = express.Router()
 
 // Get all tasks
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
   try {
     const tasks = await Task.find().sort({ createdAt: -1 })
     res.json(tasks)

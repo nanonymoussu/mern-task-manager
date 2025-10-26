@@ -1,5 +1,5 @@
 import { Check, Edit3, Plus, Trash2, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,11 +14,7 @@ function App() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchTasks()
-  }, [])
-
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       const res = await fetch('http://localhost:3000/api/tasks')
       const data = await res.json()
@@ -28,7 +24,11 @@ function App() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchTasks()
+  }, [fetchTasks])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -38,9 +38,9 @@ function App() {
       const res = await fetch('http://localhost:3000/api/tasks', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       })
       const newTask = await res.json()
       setTasks([newTask, ...tasks])
@@ -58,12 +58,12 @@ function App() {
       const res = await fetch(`http://localhost:3000/api/tasks/${editingTask._id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editFormData)
+        body: JSON.stringify(editFormData),
       })
       const updatedTask = await res.json()
-      setTasks(tasks.map((task) => task._id === editingTask._id ? updatedTask : task))
+      setTasks(tasks.map((task) => (task._id === editingTask._id ? updatedTask : task)))
       setIsEditDialogOpen(false)
       setEditingTask(null)
       setEditFormData({ title: '', description: '' })
@@ -89,12 +89,12 @@ function App() {
       const res = await fetch(`http://localhost:3000/api/tasks/${id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ completed: !completed })
+        body: JSON.stringify({ completed: !completed }),
       })
       const updatedTask = await res.json()
-      setTasks(tasks.map((task) => task._id === id ? updatedTask : task))
+      setTasks(tasks.map((task) => (task._id === id ? updatedTask : task)))
     } catch (err) {
       console.error('Error updating task:', err)
     }
@@ -103,7 +103,7 @@ function App() {
   const deleteTask = async (id) => {
     try {
       await fetch(`http://localhost:3000/api/tasks/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
       })
       setTasks(tasks.filter((task) => task._id !== id))
     } catch (err) {
@@ -113,8 +113,8 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className='min-h-screen bg-background flex items-center justify-center'>
+        <div className='text-lg'>Loading...</div>
       </div>
     )
   }
@@ -123,16 +123,27 @@ function App() {
     <div className={`min-h-screen bg-background ${isEditDialogOpen ? 'overflow-hidden' : ''}`}>
       {/* Background blur overlay when edit dialog is open */}
       {isEditDialogOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+        <button
+          type='button'
+          className='fixed inset-0 bg-black/50 backdrop-blur-sm z-40 border-0 p-0 cursor-pointer'
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              closeEditDialog()
+            }
+          }}
           onClick={closeEditDialog}
+          aria-label='Close edit dialog'
         />
       )}
 
-      <div className={`container mx-auto px-4 py-8 max-w-4xl transition-all duration-200 ${isEditDialogOpen ? 'blur-sm scale-95' : ''}`}>
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Task Manager</h1>
-          <p className="text-muted-foreground">Organize your tasks efficeiently</p>
+      <div
+        className={`container mx-auto px-4 py-8 max-w-4xl transition-all duration-200 ${
+          isEditDialogOpen ? 'blur-sm scale-95' : ''
+        }`}
+      >
+        <div className='mb-8'>
+          <h1 className='text-4xl font-bold text-foreground mb-2'>Task Manager</h1>
+          <p className='text-muted-foreground'>Organize your tasks efficeiently</p>
         </div>
 
         <Card className='mb-8'>
@@ -162,7 +173,7 @@ function App() {
           </CardContent>
         </Card>
 
-        <div className="space-y-4">
+        <div className='space-y-4'>
           {tasks.length === 0 ? (
             <Card>
               <CardContent className='flex items-center justify-center py-12'>
@@ -173,13 +184,21 @@ function App() {
             tasks.map((task) => (
               <Card key={task._id} className={task.completed ? 'opacity-75' : ''}>
                 <CardContent className='p-6'>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className={`text-lg font-semibold mb-2 ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
+                  <div className='flex items-start justify-between'>
+                    <div className='flex-1'>
+                      <h3
+                        className={`text-lg font-semibold mb-2 ${
+                          task.completed ? 'line-through text-muted-foreground' : ''
+                        }`}
+                      >
                         {task.title}
                       </h3>
                       {task.description && (
-                        <p className={`text-sm mb-3 ${task.completed ? 'text-muted-foreground' : 'text-foreground'}`}>
+                        <p
+                          className={`text-sm mb-3 ${
+                            task.completed ? 'text-muted-foreground' : 'text-foreground'
+                          }`}
+                        >
                           {task.description}
                         </p>
                       )}
@@ -187,7 +206,7 @@ function App() {
                         Created: {new Date(task.createdAt).toLocaleDateString()}
                       </p>
                     </div>
-                    <div className="flex items-center space-x-2 ml-4">
+                    <div className='flex items-center space-x-2 ml-4'>
                       <Button
                         variant='outline'
                         size='icon'
@@ -232,67 +251,72 @@ function App() {
       {isEditDialogOpen && (
         <>
           {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+          <button
+            type='button'
+            className='fixed inset-0 bg-black/50 backdrop-blur-sm z-40 border-0 p-0 cursor-pointer'
             onClick={closeEditDialog}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                closeEditDialog()
+              }
+            }}
+            aria-label='Close edit dialog'
           />
 
           {/* Modal Content */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-            <div
-              className="bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md mx-4 transform transition-all duration-200 scale-100 opacity-100 pointer-events-auto"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">Edit Task</h2>
+          <div className='fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none'>
+            <div className='bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md mx-4 transform transition-all duration-200 scale-100 opacity-100 pointer-events-auto'>
+              <div className='flex items-center justify-between mb-4'>
+                <h2 className='text-lg font-semibold'>Edit Task</h2>
                 <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
+                  type='button'
+                  variant='ghost'
+                  size='icon'
                   onClick={closeEditDialog}
-                  className="h-6 w-6 p-0"
+                  className='h-6 w-6 p-0'
                 >
-                  <X className="h-4 w-4" />
+                  <X className='h-4 w-4' />
                 </Button>
               </div>
 
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className='text-sm text-muted-foreground mb-4'>
                 Make changes to your task here. Click save when you're done.
               </p>
 
-              <form onSubmit={handleEditSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="edit-title" className="text-sm font-medium">
+              <form onSubmit={handleEditSubmit} className='space-y-4'>
+                <div className='space-y-2'>
+                  <label htmlFor='edit-title' className='text-sm font-medium'>
                     Task Title
                   </label>
                   <Input
-                    id="edit-title"
-                    placeholder="Task title"
+                    id='edit-title'
+                    placeholder='Task title'
                     value={editFormData.title}
                     onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-                    className="w-full"
+                    className='w-full'
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <label htmlFor="edit-description" className="text-sm font-medium">
+                <div className='space-y-2'>
+                  <label htmlFor='edit-description' className='text-sm font-medium'>
                     Description
                   </label>
                   <Textarea
-                    id="edit-description"
-                    placeholder="Task description (optional)"
+                    id='edit-description'
+                    placeholder='Task description (optional)'
                     value={editFormData.description}
-                    onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                    className="w-full"
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, description: e.target.value })
+                    }
+                    className='w-full'
                   />
                 </div>
 
-                <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-6">
-                  <Button type="button" variant="outline" onClick={closeEditDialog}>
+                <div className='flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-6'>
+                  <Button type='button' variant='outline' onClick={closeEditDialog}>
                     Cancel
                   </Button>
-                  <Button type="submit">
-                    Save Changes
-                  </Button>
+                  <Button type='submit'>Save Changes</Button>
                 </div>
               </form>
             </div>

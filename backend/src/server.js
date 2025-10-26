@@ -20,7 +20,7 @@ app.use(express.json())
 // Routes
 app.use('/api/tasks', taskRoutes)
 
-app.get('/', async (req, res) => {
+app.get('/', async (_req, res) => {
   res.json({ message: 'Task API is running' })
 })
 
